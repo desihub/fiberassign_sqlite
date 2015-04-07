@@ -14,7 +14,7 @@
 * The file will later be used by sqlite3 to create a database.
 */
 
-void create_sql_file (char *filename, double *x, double *y, double *z, int N);
+void create_sql_file (char *filename, char *dbname, double *x, double *y, double *z, int N);
 
 /**
  * Read an sqlite3 database -- db, from a file -- filname.

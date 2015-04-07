@@ -7,8 +7,8 @@
 
 int main(int argc, char **argv)
 {
-    const char ifib[2000] = "/scratch1/scratchdirs/lado/DATA/fb.dat";
-    const char ofib[2000] = "/scratch1/scratchdirs/lado/DATA/fb.dmp";
+    const char ifib[2000] = "/scratch1/scratchdirs/lado/DATA/fib_rand.dat";
+    const char ofib[2000] = "/scratch1/scratchdirs/lado/DATA/fib_rand.dmp";
     const char itgt[2000] = "/scratch1/scratchdirs/lado/DATA/tg.dat";
     const char otgt[2000] = "/scratch1/scratchdirs/lado/DATA/tg.dmp";
 //    fiber *fb = malloc(sizeof(fiber)*NFIBER);

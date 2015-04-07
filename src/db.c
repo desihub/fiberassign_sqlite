@@ -13,7 +13,7 @@
 int Ntg;
 
 void
-create_sql_file (char *filename, double *x, double *y, double *z, int N)
+create_sql_file (char *filename, char *dbname, double *x, double *y, double *z, int N)
 {
 
     FILE * sql_file = fopen(filename, "w");
@@ -21,12 +21,6 @@ create_sql_file (char *filename, double *x, double *y, double *z, int N)
      * I'm assuming that the filename will end on .sql, in which case I'll
      * replace it by .db
      */
-    char db_file[2000];
-    strncpy(db_file, filename, sizeof(filename) - 3);
-    db_file[sizeof(filename) - 3] = 'd';
-    db_file[sizeof(filename) - 2] = 'b';
-    db_file[sizeof(filename) - 1] = '\0';
-
     fprintf(sql_file, "CREATE VIRTUAL TABLE targets USING rtree (id, minx, maxx, miny, maxy, minz, maxz);\n");
     fprintf(sql_file, "BEGIN TRANSACTION;\n");
 
@@ -35,8 +29,7 @@ create_sql_file (char *filename, double *x, double *y, double *z, int N)
     }
 
     fprintf(sql_file, "END TRANSACTION;\n");
-    fprintf(sql_file, ".backup %s;\n", db_file);
-    fprintf(sql_file, ".exit;\n");
+    fprintf(sql_file, ".backup %s\n", dbname);
     fclose(sql_file); 
     return;
 }

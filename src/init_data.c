@@ -6,11 +6,13 @@
  * Arguments:
  * 1 -- name of input binary target file.
  * 2 -- name of input ASCII fiberpos file.
- * 3 -- name of input binary plate center file.
+ * 3 -- name of input ASCII plate center file.
  * 4 -- name of output target SQLite script file.
  * 5 -- name of output fiber SQLite script file.
- * 6 -- name of output binary target file.
- * 7 -- name of output binary fiber file.
+ * 6 -- name of output target SQLite database.
+ * 7 -- name of output fiber SQLite database.
+ * 8 -- name of output binary target file.
+ * 9 -- name of output binary fiber file.
  */
 
 #include "constants.h"
@@ -21,6 +23,7 @@
 
 #include "stdlib.h"
 #include "string.h"
+#include "stdio.h"
 
 int
 main (int argc, char **argv)
@@ -35,15 +38,21 @@ main (int argc, char **argv)
     strcpy(tg_sql, argv[4]);
     char fb_sql[2000];
     strcpy(fb_sql, argv[5]);
+    char tg_db[2000];
+    strcpy(tg_db, argv[6]);
+    char fb_db[2000];
+    strcpy(fb_db, argv[7]);
     char tg_bin[2000];
-    strcpy(tg_bin, argv[6]);
+    strcpy(tg_bin, argv[8]);
     char fb_bin[2000];
-    strcpy(fb_bin, argv[7]);
+    strcpy(fb_bin, argv[9]);
 
     target *tg = (target*)malloc(sizeof(target)*NTARGET);
     fiber *fb = (fiber*)malloc(sizeof(fiber)*NFIBER);
 
+    printf("initialize targrets\n");
     int Ntg = init_targets(tg, tg_file);
+    printf("initialize fibers\n");
     int Nfb = init_fibers(fb, fb_file, pl_file);
 
     /*< Whichever is greater out of Ntg and Nfb */
@@ -59,7 +68,7 @@ main (int argc, char **argv)
         y[i] = tg[i].y;
         z[i] = tg[i].z;
     }
-    create_sql_file(tg_sql, x, y, z, Ntg);
+    create_sql_file(tg_sql, tg_db, x, y, z, Ntg);
  
     /*< Make fibers SQLite script */
     for (int i = 0; i < Nfb; i++) {
@@ -67,7 +76,7 @@ main (int argc, char **argv)
         y[i] = fb[i].y;
         z[i] = fb[i].z;
     }
-    create_sql_file(fb_sql, x, y, z, Nfb);
+    create_sql_file(fb_sql, fb_db, x, y, z, Nfb);
 
     write_targets(tg, Ntg, tg_bin);
     write_fibers(fb, Nfb, fb_bin);

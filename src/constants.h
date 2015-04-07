@@ -5,6 +5,8 @@
 #ifndef _CONSTANTS_
 #define _CONSTANTS_
 
+/**< Number of DESI tiles */
+#define NPLATE 10666
 /**< Maximum number of targets reachable by a fiber */
 #define MAXTGT 30
 /**< Maximum number of observations required for redshift */

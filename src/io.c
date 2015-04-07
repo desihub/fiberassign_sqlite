@@ -91,12 +91,13 @@ int
 init_fibers (fiber *fib, char *fiber_file, char *plate_file)
 {
     FILE *ffile = fopen(fiber_file, "r");
-    FILE *pfile = fopen(plate_file, "rb");
+    FILE *pfile = fopen(plate_file, "r");
     /**< Read fiber x, y, z with respect to plate center */
     int fID[MAXFIBER];
     float fx[MAXFIBER];
     float fy[MAXFIBER];
     float fz[MAXFIBER];
+    printf("Read fiber file\n");
     /**< Remove first 5 lines of comments */
     char comment[2000];
     for (int i = 0; i < 5; i++) {
@@ -109,13 +110,29 @@ init_fibers (fiber *fib, char *fiber_file, char *plate_file)
     }
 
     /**< Read plate center information */
-    int Nplate;
-    fread(&Nplate, sizeof(int), 1, pfile);
-    float *ra = (float *)malloc(sizeof(float)*Nplate);
-    float *dec = (float *)malloc(sizeof(float)*Nplate);
-    fread(ra, sizeof(float), Nplate, pfile);
-    fread(dec, sizeof(float), Nplate, pfile);
-
+    int Nplate = 0;
+    int di;
+    int in_desi; /**< 1 if the tile is in DESI footprint */
+    float ra_tile, dec_tile; 
+    float df;
+    float *ra = (float *)malloc(sizeof(float)*NPLATE);
+    float *dec = (float *)malloc(sizeof(float)*NPLATE);
+    printf("Read plate file\n");
+    /**< Remove first 12 lines of comments */
+    for (int i = 0; i < 12; i++) {
+        fgets(comment, 2000, pfile);
+    }
+    /**< Until you get desired number of plates in the observed area */
+    while (Nplate < NPLATE) {
+        fscanf(pfile, "STRUCT1 %d %f %f %d %d %f %f %f\n", &di, &ra_tile,
+               &dec_tile, &di, &in_desi, &df, &df, &df);
+        if (in_desi == 1) {
+            ra[Nplate] = ra_tile;
+            dec[Nplate] = dec_tile;
+            Nplate++;
+        }
+    }
+    printf("done reading plate file\n");
     /**< x, y, z on unit sphere for each fiber */
     int Nfib = 0;
     float pra, pdec;
