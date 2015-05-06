@@ -60,8 +60,13 @@ dump_targets(const char* ifile, const char* ofile)
     FILE * ff = fopen(ofile, "w");
     target *tgt = (target*)malloc(sizeof(target)*NTARGET);
     int Ntgt = read_targets(tgt, ifile);
+    for (int i = 0; i < 10; i++) {
+        printf("%d ", tgt[i].N);
+    }
+    printf("##\n");
     for (int i = 0; i < Ntgt; i++) {
-        fprintf(ff, "%le %le %le\n", tgt[i].x, tgt[i].y, tgt[i].z);
+        fprintf(ff, "%le %le %le %d %d\n", tgt[i].ra, tgt[i].dec, tgt[i].red,
+                tgt[i].type, tgt[i].N);
     }
     fclose(ff);
 }
@@ -206,6 +211,7 @@ read_fibers (fiber *fb, const char *file)
     fclose(ifile);
     return N;
 }
+
 void 
 stat_targets (target *tgt, int N)
 {

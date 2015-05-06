@@ -23,7 +23,8 @@ int init_targets(target* tgt, char* file);
 
 /**
  * This function will read a binary file with targets information and dump the
- * x, y, z coordinates onto an ASCII file. (For debugging purposes).
+ * ra, dec, redshift onto an ASCII file. (For debugging purposes). It will
+ * also write the type of target and the number of times it has been observed.
  */
 
 void dump_targets(const char *ifile, const char *ofile);
