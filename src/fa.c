@@ -47,7 +47,7 @@ sort_fiber (fiber *fb, target *tg)
     /**< Copy relevant target information to auxiliary structure tgt */
     for (int i = 0; i < Ntgt; i++) {
         idp[i].ID = fb->targetID[i];
- //       idp[i].random = rand();
+        idp[i].random = rand();
         idp[i].dist = fb->target_dist[i];
         idp[i].pr = tg[fb->targetID[i]].pr;
     }

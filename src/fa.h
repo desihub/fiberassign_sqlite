@@ -14,7 +14,8 @@
  * -- id's of targets that can be reached by this fiber (only keep info of first
  * MAXTGT. target_dist -- distances from fiber of targets (same order as in
  * targetID).  Ntgt is the total number of targets reachable by the fiber.
- * weight -- the (optional) weight of the object.
+ * weight -- the (optional) weight of the object. obs_tgt_id -- the target to
+ * which the fiber was assigned to.
  */
 
 typedef struct 
@@ -26,6 +27,8 @@ typedef struct
     float target_dist[MAXTGT];
     int Ntgt;
     float weight;
+    /* obs_tgt_id = -1 means no target assigned */
+    int obs_tgt_id;
 }fiber;
 
 /**

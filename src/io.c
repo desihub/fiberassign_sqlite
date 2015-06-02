@@ -151,6 +151,7 @@ init_fibers (fiber *fib, char *fiber_file, char *plate_file)
             }
             fib[Nfib].Ntgt = 0;
             fib[Nfib].weight = 1.0;
+            fib[Nfib].obs_tgt_id = -1;
             /**< Not completely sure about this part. Check later!!! */
             /**
              * Start from plate center pointing towards x axis with correct
