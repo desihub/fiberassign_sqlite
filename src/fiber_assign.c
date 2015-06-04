@@ -12,6 +12,7 @@
  * 3 -- name of output ASCII file to write ra, dec, red and target type of
  * observed targets.
  * All input arguments are required.
+ * In this version the files 1 and 2 are overwritten towards the end.
  */
 
 int 
@@ -60,5 +61,7 @@ main (int argc, char **argv)
         printf("%d ", tg[i].N);
     }
     printf("#\n");
+    write_targets(tg, Ntg, argv[2]);
+    write_fibers(fb, Nfb, argv[1]);
     return 0;
 }
