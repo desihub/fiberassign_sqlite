@@ -15,6 +15,8 @@ typedef struct
     int random;
     double dist;
     float pr;
+    int Nobs;
+    int type;
 }tgt;
 
 /**
@@ -30,7 +32,15 @@ comp_tgt (const void *tgt1, const void *tgt2)
     /**< Not sure why high priority is lower number. Ask Stephen! */
     if (t1->pr < t2->pr) return -1;
     if (t1->pr > t2->pr) return 1;
-    /**< If objects have the same priority pick one randomly. */
+    /**
+     * If an object is QSOa or LRG that has been observed already give it
+     * priority
+     */
+    if ((t1->type == 1 && t2->type == 1) || (t1->type == 3 && t2->type == 3)) {
+        if (t1->Nobs != 0 && t2->Nobs == 0) return 1;
+        if (t1->Nobs == 0 && t2->Nobs != 0) return -1;
+    }
+    /**< If nothing above applies pick one randomly. */
     if (t1->random <= t2->random) return -1; 
     if (t1->random > t2->random) return 1; 
     
@@ -50,6 +60,8 @@ sort_fiber (fiber *fb, target *tg)
         idp[i].random = rand();
         idp[i].dist = fb->target_dist[i];
         idp[i].pr = tg[fb->targetID[i]].pr;
+        idp[i].Nobs = tg[fb->targetID[i]].N;
+        idp[i].type = tg[fb->targetID[i]].type;
     }
     /**< Sort using comp_tgt function */
     qsort((void*)idp, Ntgt, sizeof(tgt), comp_tgt);
@@ -69,7 +81,8 @@ sort_fiber (fiber *fb, target *tg)
  * fbr and tgt point to the beginning of the two arrays.
  */
 
-void assign_fiber(fiber *fbr, target *tgt, int NN)
+void 
+assign_fiber(fiber *fbr, target *tgt, int NN)
 {
     /**< These two point to specific fiber and target */
     fiber *fb = fbr + NN; 
@@ -95,8 +108,51 @@ void assign_fiber(fiber *fbr, target *tgt, int NN)
         if (tr->N < tr->nobs) {
             tr->fiberID[tr->N] = NN;
             tr->N = (tr->N + 1);
+            fb->obs_tgt_id = tr->ID;
             break;
         }
     } 
+    return;
+}
+
+void
+switch_fiber(fiber *fb, target *tg, int N)
+{
+    fiber *fbr = fb;
+    fiber *fbr_alt;
+    int tgid;
+    int tgid_alt;
+    for (int i = 0; i < N; i++) {
+        /**< If the fiber's unassigned */
+        if (fbr->obs_tgt_id != -1) goto OUTER_LOOP;
+        /**< For each potential target */
+        int j_up = fbr->Ntgt;
+        if (j_up > MAXTGT) j_up = MAXTGT;
+        for (int j = 0; j < j_up; j++) {
+            tgid = fbr->targetID[j];
+            for (int k = 0; k < tg[tgid].N; k++) {
+                /**< Does the fiber that has been assigned to that target */  
+	        fbr_alt = fb + tg[tgid].fiberID[k];
+                for (int l = 0; l < fbr_alt->Ntgt; l++) {
+                    tgid_alt = fbr_alt->targetID[l];
+                    /**< Have another unassigned target within its reach */
+                    if (tg[tgid_alt].nobs != tg[tgid_alt].N) {
+                        /**< If yes, switch targets */
+                        fbr->obs_tgt_id = tgid;
+                        tg[tgid].fiberID[k] = fbr->ID;
+                        fbr_alt->obs_tgt_id = tgid_alt;
+                        tg[tgid_alt].fiberID[tg[tgid_alt].N] = fbr_alt->ID; 
+                        tg[tgid_alt].N = tg[tgid_alt].N + 1;
+                        goto OUTER_LOOP;
+                    } 
+                }
+            }
+        }
+        /** 
+         * This is one of the exceptional cases where goto statement is
+         * actually useful in a c code.
+         */
+        OUTER_LOOP: fbr++;
+    }
     return;
 }

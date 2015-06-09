@@ -8,7 +8,7 @@
 #include "constants.h"
 
 /**
- * This structure describes targets. type -- (QSOa, QSO, LRG, ERG, ...); x, y, z
+ * This structure describes targets. type -- (QSOa, QSO, LRG, ELG, ...); x, y, z
  * of a target on a unit sphere; ra, dec, redshift of a target; fiberID -- id's
  * of fibers that have been assigned to this target; pr -- priority (for some
  * reason in Martin's files high number means low priority); nobs -- number of

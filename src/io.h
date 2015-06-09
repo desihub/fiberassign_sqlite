@@ -44,6 +44,12 @@ void write_targets(target *tg, int N, char *file);
 int read_targets(target *tg, const char *file);
 
 /**
+ * This function will wipe out any fiber-assignment related information.
+ */
+
+void wipe_target(target *tg);
+
+/**
  * This function will read the fiber (ffile) and plate center (pfile)
  * information from files and return a total number of fibers. It will
  * initialize fiber array -- fb.
@@ -71,6 +77,12 @@ void write_fibers(fiber *fb, int N, char *file);
  */
 
 int read_fibers(fiber *fb, const char *file);
+
+/**
+ * This function will wipe out any fiber-assignment related information.
+ */
+
+void wipe_fiber(fiber *fb);
 
 /************************************************************************************
  * Outputting results.

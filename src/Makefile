@@ -1,10 +1,10 @@
 EXE_DIR=../bin/
 CC=gcc
 CFLAGS=-Wall -O3 --std=c11
-LFLAGS=-lm -ldl -pthread -lgomp
-OBJECTS=tg.o fa.o db.o io.o
+LFLAGS=-lm -ldl -pthread -lgomp -lcfitsio
+OBJECTS=tg.o fa.o db.o io.o iofits.o
 
-all: $(EXE_DIR)fiber_reach.exe $(EXE_DIR)fiber_assign.exe $(EXE_DIR)init_data.exe
+all: $(EXE_DIR)fiber_reach.exe $(EXE_DIR)fiber_assign.exe $(EXE_DIR)init_data.exe $(EXE_DIR)write_plate.exe
 
 test: $(EXE_DIR)test.exe
 
@@ -19,6 +19,9 @@ $(EXE_DIR)fiber_reach.exe: fiber_reach.o sqlite3.o $(OBJECTS)
 $(EXE_DIR)fiber_assign.exe: fiber_assign.o $(OBJECTS)
 	$(CC) $(LFLAGS) -o $(EXE_DIR)fiber_assign.exe fiber_assign.o sqlite3.o $(OBJECTS)
 
+$(EXE_DIR)write_plate.exe: write_plate.o sqlite3.o $(OBJECTS)
+	$(CC) $(LFLAGS) -o $(EXE_DIR)write_plate.exe write_plate.o sqlite3.o $(OBJECTS)
+
 $(EXE_DIR)test.exe: test.o $(OBJECTS)
 	$(CC) $(LFLAGS) -o $(EXE_DIR)test.exe test.o sqlite3.o $(OBJECTS)
 
@@ -32,7 +35,7 @@ test.o: test.c
 	$(CC) $(CFLAGS) -c test.c 
 
 clean:
-	rm -rf init_data.o fiber_reach.o fiber_assign.o $(OBJECTS) $(EXE_DIR)*.exe
+	rm -rf init_data.o fiber_reach.o fiber_assign.o write_plate.o $(OBJECTS) $(EXE_DIR)*.exe
 
 cleansqlite3:
 	rm -rf sqlite3.o 

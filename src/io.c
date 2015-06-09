@@ -92,6 +92,12 @@ read_targets (target* obj, const char* file)
     return N;
 }
 
+void
+wipe_target (target *tg)
+{
+    tg->N = 0;
+}
+
 int 
 init_fibers (fiber *fib, char *fiber_file, char *plate_file)
 {
@@ -192,6 +198,12 @@ dump_fibers(const char* ifile, const char* ofile)
     fclose(ff);
 }
 
+void 
+wipe_fiber (fiber *fb)
+{
+    fb->obs_tgt_id = -1;
+}
+
 void
 write_fibers (fiber *fb, int N, char *file)
 {
@@ -216,33 +228,41 @@ read_fibers (fiber *fb, const char *file)
 void 
 stat_targets (target *tgt, int N)
 {
-    /* T -- total, O -- observed */
+    /**< T -- total, O -- observed, FO -- fully observed */
     int Tqsoa = 0;
     int Oqsoa = 0;
+    int FOqsoa = 0;
     int Tqso = 0;
     int Oqso = 0;
+    int FOqso = 0;
     int Tlrg = 0;
     int Olrg = 0;
+    int FOlrg = 0;
     int Telg = 0;
     int Oelg = 0;
+    int FOelg = 0;
  
     for (int i = 0; i < N; i++) {
         switch (tgt[i].type) {
             case 1: /**< QSO-alpha */
                 Tqsoa++;
-                if (tgt[i].nobs == tgt[i].N) Oqsoa++;
+                if (tgt[i].nobs == tgt[i].N) FOqsoa++;
+                if (tgt[i].N != 0) Oqsoa++;
                 break;
             case 2: /**< QSO */
                 Tqso++;
-                if (tgt[i].nobs == tgt[i].N) Oqso++;
+                if (tgt[i].nobs == tgt[i].N) FOqso++;
+                if (tgt[i].N != 0) Oqso++;
                 break;
             case 3: /**< LRG */
                 Tlrg++;
-                if (tgt[i].nobs == tgt[i].N) Olrg++;
+                if (tgt[i].nobs == tgt[i].N) FOlrg++;
+                if (tgt[i].N != 0) Olrg++;
                 break;
             case 4: /**< ELG */
                 Telg++;
-                if (tgt[i].nobs == tgt[i].N) Oelg++;
+                if (tgt[i].nobs == tgt[i].N) FOelg++;
+                if (tgt[i].N != 0) Oelg++;
                 break;
             default:
                 break;
@@ -251,12 +271,20 @@ stat_targets (target *tgt, int N)
 
     printf("%f per cent of QSOa (%d/%d) observed\n", 100.0*(double)Oqsoa/Tqsoa,
            Oqsoa, Tqsoa);
+    printf("%f per cent of QSOa (%d/%d) fully observed\n", 100.0*(double)FOqsoa/Tqsoa,
+           FOqsoa, Tqsoa);
     printf("%f per cent of QSO (%d/%d) observed\n", 100.0*(double)Oqso/Tqso,
            Oqso, Tqso);
+    printf("%f per cent of QSO (%d/%d) fully observed\n", 100.0*(double)FOqso/Tqso,
+           FOqso, Tqso);
     printf("%f per cent of LRG (%d/%d) observed\n", 100.0*(double)Olrg/Tlrg,
            Olrg, Tlrg);
+    printf("%f per cent of LRG (%d/%d) fully observed\n", 100.0*(double)FOlrg/Tlrg,
+           FOlrg, Tlrg);
     printf("%f per cent of ELG (%d/%d) observed\n", 100.0*(double)Oelg/Telg,
            Oelg, Telg);
+    printf("%f per cent of ELG (%d/%d) fully observed\n", 100.0*(double)FOelg/Telg,
+           FOelg, Telg);
 
     return;
 }

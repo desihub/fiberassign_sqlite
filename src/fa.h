@@ -46,4 +46,12 @@ void sort_fiber(fiber *fb, target *tg);
 
 void assign_fiber(fiber *fb, target *tgt, int N);
 
+/**
+ * Go through all fibers. Identify unassigned fibers. If possible, assign them
+ * to a target and reassign the fiber that has previously been assigned to that
+ * target to another. N is the number of fibers.
+ */
+
+void switch_fiber(fiber *fb, target *tgt, int N);
+
 #endif /* _FA_ */
