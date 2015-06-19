@@ -16,6 +16,7 @@ fa_write(const char *filename, fiber *fb, target *tg, int Nplate)
     char *ot_tmp[MAXFIBER];
     for (int i = 0; i < MAXFIBER; i++) {
         ot_tmp[i] = objtype[i];
+        //printf("%s\n", ot_tmp[i]);
     }
     int target_id[MAXFIBER];
     int desi_target[MAXFIBER];
@@ -24,49 +25,51 @@ fa_write(const char *filename, fiber *fb, target *tg, int Nplate)
     float x_focal[MAXFIBER];
     float y_focal[MAXFIBER];
     int potential_target_id[MAXFIBER*MAXTGT];
-    int *ptid = potential_target_id;
-    int tot_targets = 0;
-    printf("start the loop\n");
-    for (int i = Nplate*MAXFIBER; i < MAXFIBER; i++) {
-        fiber_id[i] = i;
-        positioner_id[i] = i;
-        num_target[i] = fb[i].Ntgt;
-        printf("%d ", fb[i].obs_tgt_id);
-        switch (tg[fb[i].obs_tgt_id].type) {
-            case 1:
-                strcpy(objtype[i], "QSO");
-                break;
-            case 2:
-                strcpy(objtype[i], "QSO");
-                break;
-            case 3:
-                strcpy(objtype[i], "LRG");
-                break;
-            case 4:
-                strcpy(objtype[i], "ELG");
-                break;
-            case 5:
-                strcpy(objtype[i], "QSO");
-                break;
-            case 6:
-                strcpy(objtype[i], "LRG");
-                break;
-            default:
-                strcpy(objtype[i], "OTHER");
-                break;
-        }
-        printf("%s ", objtype[i]);
-        target_id[i] = fb[i].obs_tgt_id;
-        desi_target[i] = 0;
-        ra[i] = fb[i].obs_tgt_id == -1 ? 370.0 : tg[fb[i].obs_tgt_id].ra;
-        dec[i] = fb[i].obs_tgt_id == -1 ? 370.0 : tg[fb[i].obs_tgt_id].dec;
-        x_focal[i] = 0;
-        y_focal[i] = 0;
-        for (int j = 0; j < num_target[i]; j++) {
-            *ptid = fb[i].targetID[j];
+    int ptid = 0;
+    /**< Total number of targets on all fibers of a tile */
+    int tot_tgt = 0;
+    /**< Index on plate */
+    int iop = 0;
+    for (int i = Nplate*MAXFIBER; i < (Nplate + 1)*MAXFIBER; i++) {
+        fiber_id[iop] = i;
+        positioner_id[iop] = i;
+        num_target[iop] = fb[i].Ntgt;
+        tot_tgt += num_target[iop];
+        if (tg[fb[i].obs_tgt_id].type == 1) 
+            strcpy(objtype[iop], "QSO");
+        else if (tg[fb[i].obs_tgt_id].type == 2)
+            strcpy(objtype[iop], "QSO");
+        else if (tg[fb[i].obs_tgt_id].type == 3)
+            strcpy(objtype[iop], "LRG");
+        else if (tg[fb[i].obs_tgt_id].type == 4)
+            strcpy(objtype[iop], "ELG");
+        else if (tg[fb[i].obs_tgt_id].type == 5)
+            strcpy(objtype[iop], "QSO");
+        else if (tg[fb[i].obs_tgt_id].type == 6)
+            strcpy(objtype[iop], "LRG");
+        else
+            strcpy(objtype[iop], "OTHER");
+        target_id[iop] = fb[i].obs_tgt_id;
+        desi_target[iop] = 0;
+        ra[iop] = fb[i].obs_tgt_id == -1 ? 370.0 : tg[fb[i].obs_tgt_id].ra;
+        dec[iop] = fb[i].obs_tgt_id == -1 ? 370.0 : tg[fb[i].obs_tgt_id].dec;
+        x_focal[iop] = 0;
+        y_focal[iop] = 0;
+        for (int j = 0; j < num_target[iop]; j++) {
+            potential_target_id[ptid] = fb[i].targetID[j];
             ptid++;
+            if (ptid > MAXFIBER*MAXTGT) printf("ptid problem\n");
         }
-        tot_targets += num_target[i];
+        iop++;
+    }
+    /**< If the tile is empty */
+    if (tot_tgt == 0) {
+        printf("Empty plate\n");
+        return;
+    }
+    if (tot_tgt < 0) {
+       printf("%d targets?\n", tot_tgt);
+       return;
     }
     /**< write to fits file */
     int status;
@@ -75,54 +78,41 @@ fa_write(const char *filename, fiber *fb, target *tg, int Nplate)
     fits_report_error(stdout, status);
     /**< FiberMap table */
     char *ttype[] = {"fiber", "positioner", "numtarget", "objtype", "targetid", "desi_target0", "ra", "dec", "xfocal_design", "yfocal_design"};
-    char *tform[10] = {"U", "U", "U", "8A", "J", "K", "E", "E", "E", "E"};
+    char *tform[10] = {"K", "K", "K", "8A", "K", "K", "E", "E", "E", "E"};
     char *tunit[10] = { "", "", "", "", "", "", "deg", "deg", "mm", "mm"};
     char extname[] = "FiberMap";
     fits_create_tbl(fptr, BINARY_TBL, 0, 10, ttype, tform, tunit, extname, &status);
-    printf("#\n");
     fits_report_error(stdout, status);
-    fits_write_col(fptr, TINT, 1, 1, 1, MAXFIBER, fiber_id, &status);
-    printf("#\n");
+    fits_write_col(fptr, TLONGLONG, 1, 1, 1, MAXFIBER, fiber_id, &status);
     fits_report_error(stdout, status);
-    fits_write_col(fptr, TINT, 2, 1, 1, MAXFIBER, positioner_id, &status);
-    printf("#\n");
+    fits_write_col(fptr, TLONGLONG, 2, 1, 1, MAXFIBER, positioner_id, &status);
     fits_report_error(stdout, status);
-    fits_write_col(fptr, TINT, 3, 1, 1, MAXFIBER, num_target, &status);
-    printf("#\n");
+    fits_write_col(fptr, TLONGLONG, 3, 1, 1, MAXFIBER, num_target, &status);
     fits_report_error(stdout, status);
     fits_write_col(fptr, TSTRING, 4, 1, 1, MAXFIBER, ot_tmp, &status);
     fits_report_error(stdout, status);
-    fits_write_col(fptr, TINT, 5, 1, 1, MAXFIBER, target_id, &status);
-    printf("#\n");
+    fits_write_col(fptr, TLONGLONG, 5, 1, 1, MAXFIBER, target_id, &status);
     fits_report_error(stdout, status);
-    fits_write_col(fptr, TINT, 6, 1, 1, MAXFIBER, desi_target, &status);
-    printf("#\n");
+    fits_write_col(fptr, TLONGLONG, 6, 1, 1, MAXFIBER, desi_target, &status);
     fits_report_error(stdout, status);
     fits_write_col(fptr, TFLOAT, 7, 1, 1, MAXFIBER, ra, &status);
-    printf("#\n");
     fits_report_error(stdout, status);
     fits_write_col(fptr, TFLOAT, 8, 1, 1, MAXFIBER, dec, &status);
-    printf("#\n");
     fits_report_error(stdout, status);
     fits_write_col(fptr, TFLOAT, 9, 1, 1, MAXFIBER, x_focal, &status);
-    printf("#\n");
     fits_report_error(stdout, status);
     fits_write_col(fptr, TFLOAT, 10, 1, 1, MAXFIBER, y_focal, &status);
-    printf("#\n");
     fits_report_error(stdout, status);
     /**< PotentialFiberMap table */
     char *ttype2[] = {"potentialtargetid"};
-    char *tform2[1] = {"V"}; 
+    char *tform2[1] = {"K"}; 
     char *tunit2[10] = {""};
     char extname2[] = "PotentialFiberMap"; 
     fits_create_tbl(fptr, BINARY_TBL, 0, 1, ttype2, tform2, tunit2, extname2, &status);
-    printf("#\n");
     fits_report_error(stdout, status);
-    fits_write_col(fptr, TINT, 1, 1, 1, tot_targets, potential_target_id, &status);
-    printf("#\n");
+    fits_write_col(fptr, TLONGLONG, 1, 1, 1, tot_tgt, potential_target_id, &status);
     fits_report_error(stdout, status);
     fits_close_file(fptr, &status);
-    printf("#\n");
     fits_report_error(stdout, status);
 
     return;

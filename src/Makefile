@@ -2,7 +2,7 @@ EXE_DIR=../bin/
 CC=gcc
 CFLAGS=-Wall -O3 --std=c11
 LFLAGS=-lm -ldl -pthread -lgomp -lcfitsio
-OBJECTS=tg.o fa.o db.o io.o iofits.o
+OBJECTS=tg.o fa.o db.o io.o iofits.o decals.o
 
 all: $(EXE_DIR)fiber_reach.exe $(EXE_DIR)fiber_assign.exe $(EXE_DIR)init_data.exe $(EXE_DIR)write_plate.exe
 

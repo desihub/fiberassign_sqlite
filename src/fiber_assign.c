@@ -58,13 +58,13 @@ main (int argc, char **argv)
         if(tg->N > tg->nobs) printf("More4 ");
     }
     stat_targets(tg, Ntg);
-//    print_observed_targets(tg, Ntg, argv[3]); 
+    print_observed_targets(tg, Ntg, argv[3]); 
     for (int i = 0; i < 10; i++) {
         printf("%d ", tg[i].N);
     }
     printf("#\n");
-//    write_targets(tg, Ntg, argv[2]);
-//    write_fibers(fb, Nfb, argv[1]);
+    write_targets(tg, Ntg, argv[2]);
+    write_fibers(fb, Nfb, argv[1]);
     free(fb);
     free(tg);
     return 0;

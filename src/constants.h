@@ -25,5 +25,9 @@
 #define NFIBER 55000000
 /**< Maximum number of targets */
 #define NTARGET 50000000
-
+/**< Maximum number of points in a polygon */
+#define MAXPOLY 10
+/**< If fiber is within this distance from the middle it will not collide with
+ * other fibers (in mm) (2*sin(83deg/2)*PATROL_RAD/2*/
+#define SAFE_D 3.975
 #endif /* _CONSTANTS_ */

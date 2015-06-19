@@ -14,7 +14,8 @@
  * reason in Martin's files high number means low priority); nobs -- number of
  * fiber assignments required for redshift determination; N -- number of fibers
  * actually assigned; weight -- for random points may incorporate things like
- * completeness, etc.
+ * completeness, etc. ID is the order in which the target appears in the array;
+ * targetID is the identifier assigned to it in the targeting catalogue.
  */
 
 typedef struct 
@@ -25,6 +26,7 @@ typedef struct
     float pr;
     int nobs;
     int ID;
+    int targetID;
     int fiberID[MAXOBS];
     int N;
     float weight;

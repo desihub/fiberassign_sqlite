@@ -65,7 +65,7 @@ dump_targets(const char* ifile, const char* ofile)
     }
     printf("##\n");
     for (int i = 0; i < Ntgt; i++) {
-        fprintf(ff, "%le %le %le %d %d\n", tgt[i].ra, tgt[i].dec, tgt[i].red,
+        fprintf(ff, "%le %le %le %d %d\n", tgt[i].x, tgt[i].y, tgt[i].z,
                 tgt[i].type, tgt[i].N);
     }
     fclose(ff);
@@ -193,7 +193,7 @@ dump_fibers(const char* ifile, const char* ofile)
     int Nfb = read_fibers(fb, ifile);
     printf("Nfb = %d\n", Nfb);
     for (int i = 0; i < Nfb; i++) {
-        fprintf(ff, "%le %le %le\n", fb[i].x, fb[i].y, fb[i].z);
+        fprintf(ff, "%le %le %le %d\n", fb[i].x, fb[i].y, fb[i].z, fb[i].Ntgt);
     }
     fclose(ff);
 }
