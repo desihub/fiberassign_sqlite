@@ -1,6 +1,8 @@
 #
 # Lado Samushia (lado@phys.ksu.edu), March 2015
 #
+# updated July 2015 LS.
+#
 
 =======================
 INTRO
@@ -8,81 +10,47 @@ INTRO
 
 This is a brief documentation of the fiber assignment code.
 
-The code takes as an input three files:
-1) The file with information about targets (targets.dat)
+The code needs three files as an input:
+1) The FITS file with information about targets (targets.fits)
 2) The file with information about fiber positions wrt plate centers
-(fibers.dat) 
+(fiberpos.txt) 
 3) The file with information about angular positions of plate
-centers (targets.dat)
+centers (desi-tiles.par.txt)
 
-The code ultimately outputs one file
-1) The file with positions of all targets with observed redshifts
-(catalogue.txt)
-(To be used by a correlation function computing code later).
+(2) and (3) sample files can be found in /etc.
+(1) was to big to be put in /etc, but the code has been tested with
+/scratch1/scratchdirs/forero/decalsdesi/Targets_decalsdump_099999.fits
 
-=======================
-INPUT FORMAT:
-=======================
+The code currently only works with one concatenated FITS file. The option of
+providing multiple FITS files (one per tile) is being implemented.
 
-1) targets.dat -- this is a binary file that has
-(int)N - Number of targets in the file
-(float)ra[N] - right ascension of targets (degrees)
-(float)dec[N] - declination of targets (degrees)
-(float)red[N] - redshift of targets
-(float)type[N] - type of targets (1=QSOa, 2=QSO, 3=LRG, 4=ELG, 5=badQSO,
-6=badLRG)
-This format is due to legacy reasons (Martin White, who created Nbody catalogues
-stores his data in this format). We are planning on switching the input to a
-binary FITS table of some sort.
-
-2) fibers.dat -- this is a text file, the format of a file is given by a file
-"../etc/fiberpos.txt".
-
-3) This is a binary file that has
-(int)N - Number of plates in the file
-(float)ra - right ascension of plates (degrees)
-(float)dec - declination of plates (degrees)
-The is the format in which David Schlegel stores info.
-
-===========================
-OUTPUT FORMAT:
-===========================
-
-1) catalogue.txt -- for now this is an ASCII file with four columns that are
-i) ra of observed target
-ii) dec of observed target
-iii) redshift of observed target
-iv) type of observed target
-This format is temporary and will most likely change to a binary FITS table of
-some sort. It's also likely that we will want to propagate more information
-forwards to the correlation function computing code.
-
-We will also need an output file that will list which fibers are assigned to
-which targets. I will write that as soon as we agree on the format.
+The code ultimately outputs series of FITS files one per each non-empty
+plate. If the plate is empty (=non of the fibers were assigned/outside of
+footprint) the output file will not be generated
 
 ============================
 Auxiliary files
 ============================
 
-tar.sql: an sqlite3 script file. This file will be fed to sqlite3
-sqlite3 < tar.sql
-to create a database of targets (tar.db)
+target.sql: an sqlite3 script file. This file will be fed to sqlite3
+sqlite3 < target.sql
+to create a database of targets (target.db)
 
-fib.sql: an sqlite3 script file. This file will be fed to sqlite3
-sqlite3 < fib.sql
-to create a database of fibers (fib.db)
+fiber.sql: an sqlite3 script file. This file will be fed to sqlite3
+sqlite3 < fiber.sql
+to create a database of fibers (fiber.db)
 
-tar.db: An sqlite3 database file storing 3D positions of all targets (on unit
+target.db: An sqlite3 database file storing 3D positions of all targets (on unit
 sphere). Will be used for quick range searches.
 
-fib.db: An sqlite3 database file storing 3D positions of all fibers (on unit
+fiber.db: An sqlite3 database file storing 3D positions of all fibers (on unit
 sphere). Current version of the code doesn't use this database, but maybe useful
 for something later.
 
-tar.dat: A binary file storing all the relevant information about targets for
+target.dat: A binary file storing all the relevant information about targets for
 fiber assignment. (For the format see tg.h).
 
-fib.dat: A binary file storing all the relevant information about fibers for
+fiber.dat: A binary file storing all the relevant information about fibers for
 fiber assignment. (For the format see fa.h).
 
 =============================
@@ -96,45 +64,52 @@ There are three steps to generating the catalogue of observed targets
 3) fiber_assign: assign a specific target to each fiber based on a fiber
 assignment priorities
 
+The basic idea is that the time consuming steps (1)-(1.5)-(2) will only have to
+be run once and the quick fiber assignment itself (step 3) can be rerun as many times
+as desired later.
+
+All the times below are for a large 50mil object targeting catalogue.
+
 init_data.exe: 
-This takes < 10 minutes on a single CPU. Creates files fib.sql and tar.sql that
+This takes < 10 minutes on a single CPU. Creates files fiber.sql and target.sql that
 will be used by sqlite3 later.
-input: targets.dat, fibers.dat, plates.dat
-output: fib.dat, tar.dat, fib.sql, tar.sql
+input: targets.fits, fiberposs.txt, desi-tiles.par.txt
+output: fiber.dat, target.dat, fiber.sql, target.sql
 
 sqlite3:
-This takes 30 minutes on a single CPU. Creates databases fib.db and tar.db that
+This takes 30 minutes on a single CPU. Creates databases fiber.db and target.db that
 can be read and re-used as required later.
-input: fib.sql, tar.sql
-output: fib.db, tar.db
+input: fiber.sql, target.sql
+output: fiber.db, target.db
 
 fiber_reach:
-This takes 2-3 hours on a single CPU (in principle easily parallelizable). Will
-find all targets reachable by each fiber. The information is stored in fib.dat
+This takes ~2 hours on a single CPU (in principle easily parallelizable). Will
+find all targets reachable by each fiber. The information is stored in fiber.dat
 and can be re-used later.
-input: fib.dat, tar.db
-output: fib.dat
+input: fiber.dat, target.db
+output: modifies fiber.dat
 
 fiber_assign:
-This is the actual fiber assignment. Takes < 5 minutes on a single CPU.
-input: fib.dat, tar.dat
-output: catalogue.txt
+This is the actual fiber assignment. Takes < few minutes on a single CPU.
+input: fiber.dat, target.dat
+output: set of FITS files
 
 The nice thing about the pipeline is that the database of targets has to be
 created only once (The targets don't move), and the database of fibers also has
 to be created only once for each tiling. Once these databases are in place and
-the fiber_reach.exe is run (~3 hours on a single CPU), the actual fiber
+the fiber_reach.exe is run (~2 hours on a single CPU), the actual fiber
 assignment is really fast (~few minutes) and can be rerun as many times as
 needed with different options.
 
 If some information about targets changes (we thought it was an LRG, turns out
-it's not) this can be updated instantaneously in the tar.dat file without a need
-to rebuild the database.
+it's not) this can be updated instantaneously in the target.dat file without a
+need to rebuild the database.
 
 ================================
 COMPILING
 ================================
 
+$make sqlite3
 $make all
 
 ================================
@@ -143,21 +118,32 @@ RUNNING
 
 Assuming you are in the main directory:
 
-$./bin/init_data.exe targets.dat fibers.dat plates.dat tar.sql fib.sql tar.dat \
-fib.dat
+$./bin/init_data.exe targets.fits etc/fiberpos.txt  etc/desi-tiles.par.txt \
+targets.sql fibers.sql targets.dat fibers.dat
 
 $sqlite3 < tar.sql
 
 $sqlite3 < fib.sql
 
-$./bin/fiber_reach.exe fib.db fib.dat
+$./bin/fiber_reach.exe targets.db fibers.dat
     
-$./bin/fiber_assign.exe fib.dat tar.dat catalogue.txt
+$./bin/fiber_assign.exe fibers.dat targets.dat 
+
+$./bin/write_plate.exe fibers.dat targets.dat output
+
+The last command will write to sets of fits files with filenames outputXXX.fits
+where XXX is the plate ID.
+One anoing thing at the moment is that if you want to rewrite the files you will
+have to remove the previous version manually (the routine can't overwrite). Will
+fix this later.
+
+If you have run this on a specific targeting catalogue and tiling scheme once
+you only have to rerun the last two steps (fiber_assign.exe and
+write_plate.exe).
 
 ================================
 TO DO
 ================================
 
-1) Once we figure out the format of all input and output files implement them.
-2) The mapping from fiber x, y, z to angular coordinates is very likely not
+1) The mapping from fiber x, y, z to angular coordinates is very likely not
 accurate.
