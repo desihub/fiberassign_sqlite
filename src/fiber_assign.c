@@ -9,7 +9,6 @@
  * This program takes input arguments:
  * 1 -- name of binary file with fiber information.
  * 2 -- name of binary file with target information.
- * 3 -- name of output ASCII file to write ra, dec, red and target type of
  * observed targets.
  * All input arguments are required.
  * In this version the files 1 and 2 are overwritten towards the end
@@ -58,10 +57,10 @@ main (int argc, char **argv)
         if(tg->N > tg->nobs) printf("More4 ");
     }
     stat_targets(tg, Ntg);
-    print_observed_targets(tg, Ntg, argv[3]); 
-    for (int i = 0; i < 10; i++) {
-        printf("%d ", tg[i].N);
-    }
+//    print_observed_targets(tg, Ntg, argv[3]); 
+//    for (int i = 0; i < 10; i++) {
+//        printf("%d ", tg[i].N);
+//    }
     printf("#\n");
     write_targets(tg, Ntg, argv[2]);
     write_fibers(fb, Nfb, argv[1]);
