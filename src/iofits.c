@@ -4,6 +4,7 @@
 #include "tg.h"
 
 #include "string.h"
+#include "math.h"
 
 void
 fa_write(const char *filename, fiber *fb, target *tg, int Nplate)
@@ -116,4 +117,78 @@ fa_write(const char *filename, fiber *fb, target *tg, int Nplate)
     fits_report_error(stdout, status);
 
     return;
+}
+
+int
+tg_read (const char *filename, target *tgt)
+{
+    fitsfile *fptr;
+    long int Ntgt;
+    int status, hdutype, anynull, hdunum;
+    char strnull[10];
+    strcpy(strnull, " ");
+    printf("opening input fits file\n");
+    fits_open_file(&fptr, filename, READONLY, &status);
+    printf("moving to the right header\n");
+    fits_get_num_hdus(fptr, &hdunum, &status);
+    printf("%d\n", hdunum);
+    fits_get_hdu_num(fptr, &hdunum);
+    printf("%d\n", hdunum);
+    fits_movabs_hdu(fptr, 2, &hdutype, &status);
+    printf("%d\n", hdutype);
+    printf("getting number of rows\n");
+    fits_get_num_rows(fptr, &Ntgt, &status);
+    printf("Ntgt = %ld\n", Ntgt);
+    int *id = (int*) malloc(Ntgt*sizeof(int));
+    int *tid = (int*) malloc(Ntgt*sizeof(int));
+    float *ra = (float*) malloc(Ntgt*sizeof(float));
+    float *dec = (float*) malloc(Ntgt*sizeof(float));
+    float *pr = (float*) malloc(Ntgt*sizeof(float));
+    int *nobs = (int*) malloc(Ntgt*sizeof(int));
+    char *type[Ntgt];
+    for (int i = 0; i < Ntgt; i++) type[i] = (char*)malloc(8*sizeof(char));
+    fits_read_col(fptr, TSHORT, 1, 1, 1, Ntgt, strnull,  id,
+                    &anynull, &status);
+    fits_read_col(fptr, TSHORT, 2, 1, 1, Ntgt, strnull,  tid,
+                    &anynull, &status);
+    fits_read_col(fptr, TDOUBLE, 3, 1, 1, Ntgt, strnull,  ra,
+                    &anynull, &status);
+    fits_read_col(fptr, TDOUBLE, 4, 1, 1, Ntgt, strnull,  dec,
+                    &anynull, &status);
+    fits_read_col(fptr, TDOUBLE, 5, 1, 1, Ntgt, strnull,  pr,
+                    &anynull, &status);
+    fits_read_col(fptr, TDOUBLE, 6, 1, 1, Ntgt, strnull,  nobs,
+                    &anynull, &status);
+    fits_read_col(fptr, TSTRING, 7, 1, 1, Ntgt, strnull,  type,
+                    &anynull, &status);
+    for (int i = 0; i < Ntgt; i++) {
+        tgt[i].ra = ra[i];
+        tgt[i].dec = dec[i];
+        tgt[i].red = 0.0;
+        tgt[i].x = sin(dec[i]*DTOR - PI/2.0)*cos(ra[i]*DTOR);
+        tgt[i].y = sin(dec[i]*DTOR - PI/2.0)*sin(ra[i]*DTOR);
+        tgt[i].z = cos(dec[i]*DTOR - PI/2.0);
+        if (strcmp(type[i], "LRG") == 0) tgt[i].type = 3;
+        else if(strcmp(type[i], "ELG") == 0) tgt[i].type = 4;
+        else if(strcmp(type[i], "QSO") == 0) tgt[i].type = 2;
+        else tgt[i].type = 0;
+        tgt[i].pr = pr[i];
+        tgt[i].nobs = nobs[i];
+        tgt[i].N = 0;
+        tgt[i].weight = 1.0;
+        tgt[i].ID = i;
+        tgt[i].targetID = tid[i];
+        for (int j = 0; j < MAXOBS; j++) {
+            tgt[i].fiberID[j] = 0;
+        }       
+    }
+    free(id);
+    free(tid);
+    free(ra);
+    free(dec);
+    free(pr);
+    free(nobs);
+    for (int i = 0; i < Ntgt; i++) free(type[i]);
+    fits_close_file(fptr, &status);
+    return Ntgt;
 }

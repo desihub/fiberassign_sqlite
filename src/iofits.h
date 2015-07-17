@@ -18,4 +18,10 @@
 
 void fa_write (const char *filename, fiber *fb, target *tg, int Nplate);
 
+/**
+ * Read target information from a single FITS file.
+ */
+
+int tg_read (const char *filename, target *tg);
+
 #endif /* _IOFITS_ */
