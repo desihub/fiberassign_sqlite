@@ -21,6 +21,7 @@
 #include "io.h"
 #include "db.h"
 #include "decals.h"
+#include "iofits.h"
 
 #include "stdlib.h"
 #include "string.h"
@@ -52,7 +53,7 @@ main (int argc, char **argv)
     fiber *fb = (fiber*)malloc(sizeof(fiber)*NFIBER);
 
     printf("initialize targrets\n");
-    int Ntg = init_targets_decals(tg, tg_file);
+    int Ntg = tg_read(tg_file, tg);
     printf("initialize fibers\n");
     int Nfb = init_fibers(fb, fb_file, pl_file);
 
