@@ -20,7 +20,6 @@
 #include "fa.h"
 #include "io.h"
 #include "db.h"
-#include "decals.h"
 #include "iofits.h"
 
 #include "stdlib.h"
